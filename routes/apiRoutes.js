@@ -5,10 +5,10 @@ const readFileAsync = util.promisify(fs.readFile);
 const writeFileAsync = util.promisify(fs.writeFile);
 
 module.exports = function (app) {
+    // Reads db.json and display to /api/notes
     app.get("/api/notes", async function (req, res) {
         try {
             let noteData = await readFileAsync("./db/db.json", "utf8");
-            console.log(`line 12: ${noteData}`)
             noteData = JSON.parse(noteData);
             res.json(noteData);
         }
@@ -17,33 +17,29 @@ module.exports = function (app) {
         }
     });
 
+    // If new note is added, update db.json to reflect the new data
     app.post("/api/notes", async function (req, res) {
         try {
             const data = await readFileAsync("./db/db.json", "utf8");
             let noteJSON = JSON.parse(data);
             noteJSON.push(req.body);
-            // console.log(noteJSON);
-            // noteJSON = JSON.stringify(noteJSON, null, 2);
 
             await writeFileAsync("./db/db.json", JSON.stringify(noteJSON, null, 2), "utf8");
             console.log("Successfully wrote to db.json file");
             res.json(noteJSON);
-
-            // const newData = await require("../db/db.json");
-            // res.json(newData);
         } catch (e) {
             console.log(e);
         }
     });
 
+    // Finds unique id given to decide which data should be removed
+    // Assigns new unique id after deletion and writes to db.json
     app.delete("/api/notes/:id", async function (req, res) {
         try {
             const data = await readFileAsync("./db/db.json", "utf8");
             let noteJSON = JSON.parse(data);
             const chosen = req.params.id;
-            console.log(`line 46: ${chosen}`);
             const deleted = noteJSON.findIndex(ele => ele.id == chosen);
-            console.log(`line 48: ${deleted}`);
 
             noteJSON.splice(deleted, 1);
             noteJSON.map((note, i) => {
